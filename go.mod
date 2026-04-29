@@ -64,9 +64,9 @@ require (
 	github.com/vbauerster/mpb/v8 v8.12.0
 	github.com/vishvananda/netlink v1.3.1
 	go.podman.io/buildah v1.42.1-0.20260421143840-0acb6b8cca85
-	go.podman.io/common v0.67.2-0.20260428163628-e3b0c9aa788d
-	go.podman.io/image/v5 v5.39.3-0.20260428163628-e3b0c9aa788d
-	go.podman.io/storage v1.62.1-0.20260428163628-e3b0c9aa788d
+	go.podman.io/common v0.67.2-0.20260430110239-06cbc5da36f1
+	go.podman.io/image/v5 v5.39.3-0.20260430110239-06cbc5da36f1
+	go.podman.io/storage v1.62.1-0.20260430110239-06cbc5da36f1
 	golang.org/x/crypto v0.50.0
 	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
