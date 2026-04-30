@@ -113,7 +113,21 @@ func outputTemplate(cmd *cobra.Command, responses []*entities.VolumeListReport) 
 			return fmt.Errorf("failed to write report column headers: %w", err)
 		}
 	}
-	return rpt.Execute(responses)
+	reporters := make([]volumeReporter, 0, len(responses))
+	for _, r := range responses {
+		reporters = append(reporters, volumeReporter{r})
+	}
+	return rpt.Execute(reporters)
+}
+
+type volumeReporter struct {
+	*entities.VolumeListReport
+}
+
+// Labels returns the volume's labels as a sorted, comma-separated list of
+// key=value pairs, matching Docker CLI output format.
+func (v volumeReporter) Labels() string {
+	return common.FormatLabels(v.VolumeListReport.Labels)
 }
 
 func outputJSON(vols []*entities.VolumeListReport) error {

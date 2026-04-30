@@ -666,4 +666,23 @@ EOF
     run_podman volume rm $volume_name --force
 }
 
+@test "podman volume ls --format Labels is a string" {
+    rand_value=$(random_string 10)
+    volume_name="v-$(safename)"
+
+    run_podman volume create --label mylabel=$rand_value $volume_name
+
+    # {{json .Labels}} should produce a JSON string, not a JSON object
+    run_podman volume ls --format '{{json .Labels}}'
+    assert "$output" =~ "\".*mylabel=${rand_value}.*\"" "json .Labels should be a quoted string, not a JSON object"
+    assert "$output" !~ "{" "json .Labels should not contain braces (not a JSON object)"
+
+    # Plain {{.Labels}} should produce key=value format
+    run_podman volume ls --format '{{.Labels}}'
+    assert "$output" =~ "mylabel=${rand_value}" ".Labels should contain key=value pair"
+    assert "$output" !~ "map\[" ".Labels should not use Go map format"
+
+    run_podman volume rm $volume_name
+}
+
 # vim: filetype=sh
