@@ -239,6 +239,43 @@ load helpers
     run_podman pod rm -t 0 -f test
 }
 
+@test "podman ps --format json Labels is a string" {
+    rand_value=$(random_string 10)
+
+    run_podman run -d --label mylabel=$rand_value $IMAGE sleep inf
+    cid=$output
+
+    # {{json .Labels}} should produce a JSON string ("key=val,..."), not a JSON object
+    run_podman ps --format '{{json .Labels}}'
+    assert "$output" =~ "\".*mylabel=${rand_value}.*\"" "json .Labels should be a quoted string, not a JSON object"
+    assert "$output" !~ "{" "json .Labels should not contain braces (not a JSON object)"
+
+    # Plain {{.Labels}} should produce key=value format
+    run_podman ps --format '{{.Labels}}'
+    assert "$output" =~ "mylabel=${rand_value}" ".Labels should contain key=value pair"
+    assert "$output" !~ "map\[" ".Labels should not use Go map format"
+
+    run_podman rm -t 0 -f $cid
+}
+
+@test "podman pod ps --format json Labels is a string" {
+    rand_value=$(random_string 10)
+
+    run_podman pod create --label mylabel=${rand_value} test
+
+    # {{json .Labels}} should produce a JSON string, not a JSON object
+    run_podman pod ps --format '{{json .Labels}}'
+    assert "$output" =~ "\".*mylabel=${rand_value}.*\"" "json .Labels should be a quoted string, not a JSON object"
+    assert "$output" !~ "{" "json .Labels should not contain braces (not a JSON object)"
+
+    # Plain {{.Labels}} should produce key=value format
+    run_podman pod ps --format '{{.Labels}}'
+    assert "$output" =~ "mylabel=${rand_value}" ".Labels should contain key=value pair"
+    assert "$output" !~ "map\["  ".Labels should not use Go map format"
+
+    run_podman pod rm -t 0 -f test
+}
+
 @test "podman ps --format PodName" {
     rand_value=$(random_string 10)
 

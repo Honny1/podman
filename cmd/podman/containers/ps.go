@@ -342,7 +342,13 @@ func (l psReporter) ImageID() string {
 	return l.ListContainer.ImageID
 }
 
-// Label returns a map of the pod's labels
+// Labels returns the container's labels as a sorted, comma-separated list of
+// key=value pairs, matching Docker CLI output format.
+func (l psReporter) Labels() string {
+	return common.FormatLabels(l.ListContainer.Labels)
+}
+
+// Label returns the value of a single container label by name.
 func (l psReporter) Label(name string) string {
 	return l.ListContainer.Labels[name]
 }

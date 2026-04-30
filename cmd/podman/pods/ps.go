@@ -194,9 +194,10 @@ func (l ListPodReporter) Created() string {
 	return units.HumanDuration(time.Since(l.ListPodsReport.Created)) + " ago"
 }
 
-// Labels returns a map of the pod's labels
-func (l ListPodReporter) Labels() map[string]string {
-	return l.ListPodsReport.Labels
+// Labels returns the pod's labels as a sorted, comma-separated list of
+// key=value pairs, matching Docker CLI output format.
+func (l ListPodReporter) Labels() string {
+	return common.FormatLabels(l.ListPodsReport.Labels)
 }
 
 // Label returns a map of the pod's labels

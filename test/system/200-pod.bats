@@ -309,7 +309,7 @@ EOF
 
     # pod ps
     run_podman pod ps --format '{{.ID}} {{.Name}} {{.Status}} {{.Labels}}'
-    assert "$output" =~ "${pod_id:0:12} $podname Running map\[${labelname}:${labelvalue}]"  "pod ps"
+    assert "$output" =~ "${pod_id:0:12} $podname Running ${labelname}=${labelvalue}"  "pod ps"
 
     run_podman pod ps --no-trunc --filter "label=${labelname}=${labelvalue}" --format '{{.ID}}'
     is "$output" "$pod_id" "pod ps --filter label=..."

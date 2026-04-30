@@ -213,10 +213,10 @@ EOF
 
 @test "ps -a : shows all containers" {
     run_podman ps -a \
-               --format '{{.Names}}--{{.Status}}--{{.Ports}}--{{.Labels.mylabel}}' \
+               --format '{{.Names}}--{{.Status}}--{{.Ports}}--{{.Label "mylabel"}}' \
                --sort=created
     assert "${lines[0]}" == "mycreatedcontainer--Created----$LABEL_CREATED" "line 0, created"
-    assert "${lines[1]}" =~ "mydonecontainer--Exited \(0\).*----<no value>"   "line 1, done"
+    assert "${lines[1]}" =~ "mydonecontainer--Exited \(0\).*----"   "line 1, done"
     assert "${lines[2]}" =~ "myfailedcontainer--Exited \(17\) .*----$LABEL_FAILED" "line 2, fail"
 
     # Port order is not guaranteed
@@ -224,7 +224,7 @@ EOF
     assert "${lines[3]}" =~ ".*--.*0\.0\.0\.0:$HOST_PORT->80\/tcp.*--.*"  "line 3, first port forward"
     assert "${lines[3]}" =~ ".*--.*127\.0\.0\.1\:9090-9092->8080-8082\/tcp.*--.*" "line 3, second port forward"
 
-    assert "${lines[4]}" =~ ".*-infra--Created----<no value>" "line 4, infra container"
+    assert "${lines[4]}" =~ ".*-infra--Created----" "line 4, infra container"
 
     # For debugging: dump containers and IDs
     if [[ -n "$PODMAN_UPGRADE_TEST_DEBUG" ]]; then
