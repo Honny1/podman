@@ -443,6 +443,11 @@ func Init(home string, options graphdriver.Options) (graphdriver.Driver, error) 
 		}
 	}
 
+	// Clean up stale tempdirs early, before MakePrivate.
+	if err := tempdir.RecoverStaleDirs(filepath.Join(home, tempDirName)); err != nil {
+		return nil, fmt.Errorf("overlay: recover stale temp dirs: %w", err)
+	}
+
 	if !opts.skipMountHome {
 		if err := mount.MakePrivate(home); err != nil {
 			return nil, fmt.Errorf("overlay: failed to make mount private: %w", err)
@@ -1392,7 +1397,7 @@ func (d *Driver) removeCommon(id string, cleanup func(string) error) error {
 	if err == nil {
 		linkPath := path.Join(d.home, linkDir, string(lid))
 		if err := cleanup(linkPath); err != nil {
-			logrus.Debugf("Failed to remove link: %v", err)
+			logrus.Warnf("Failed to remove link: %v", err)
 		}
 	}
 
