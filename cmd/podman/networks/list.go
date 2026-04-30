@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -151,13 +150,10 @@ type ListPrintReports struct {
 	types.Network
 }
 
-// Labels returns any labels added to a Network
+// Labels returns the network's labels as a sorted, comma-separated list of
+// key=value pairs, matching Docker CLI output format.
 func (n ListPrintReports) Labels() string {
-	list := make([]string, 0, len(n.Network.Labels))
-	for k, v := range n.Network.Labels {
-		list = append(list, k+"="+v)
-	}
-	return strings.Join(list, ",")
+	return common.FormatLabels(n.Network.Labels)
 }
 
 // ID returns the Podman Network ID
