@@ -10,4 +10,10 @@ if ($Env:CI -eq "true") {
 
 Run-Command ".\winmake.ps1 localunit"
 
+Run-Command ".\winmake.ps1 ginkgo-run" # non-machine e2e integration
+                                       # test. Currently it's only
+                                       # checking the hyperv-prep
+                                       # command and it doesn't deserve
+                                       # a specific task.
+
 Pop-Location

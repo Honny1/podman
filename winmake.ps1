@@ -78,6 +78,15 @@ function Local-Machine {
     param (
         [string]$files
     );
+    Ginkgo-Run -files $files -testPath 'pkg/machine/e2e/.' -defaultTimeout '50m'
+}
+
+function Ginkgo-Run {
+    param (
+        [string]$files,
+        [string]$testPath = 'test/e2e/.',
+        [string]$defaultTimeout = '5m'
+    );
     Build-Ginkgo
     if ($files) {
         $files = "--focus-file ""$files"""
@@ -89,8 +98,8 @@ function Local-Machine {
         $focus = "--focus ""$FOCUS"" --silence-skips"
     }
 
-    if ($null -eq $ENV:GINKGOTIMEOUT) { $ENV:GINKGOTIMEOUT = '--timeout=50m' }
-    Run-Command "./bin/ginkgo.exe -vv --tags `"$remotetags`" ${ENV:GINKGOTIMEOUT} --trace --no-color $focus $files pkg/machine/e2e/."
+    if ($null -eq $ENV:GINKGOTIMEOUT) { $ENV:GINKGOTIMEOUT = "--timeout=$defaultTimeout" }
+    Run-Command "./bin/ginkgo.exe -vv --tags `"$remotetags`" ${ENV:GINKGOTIMEOUT} --trace --no-color $focus $files $testPath"
 }
 
 # Expect starting directory to be /podman
@@ -379,6 +388,12 @@ switch ($target) {
         }
         Local-Machine -files $files
     }
+    'ginkgo-run' {
+        if ($params.Count -gt 1) {
+            $files = $params[1]
+        }
+        Ginkgo-Run -files $files
+    }
     'clean' {
         Make-Clean
     }
@@ -430,6 +445,12 @@ switch ($target) {
         Write-Host
         Write-Host 'Example: Run specific machine tests '
         Write-Host ' .\winmake localmachine 'basic_test.go""
+        Write-Host
+        Write-Host 'Example: Run all e2e tests '
+        Write-Host ' .\winmake ginkgo-run'
+        Write-Host
+        Write-Host 'Example: Run specific e2e tests '
+        Write-Host ' .\winmake ginkgo-run "system_hyperv_prep_test.go"'
         Write-Host
         Write-Host 'Example: Download win-gvproxy and win-sshproxy helpers'
         Write-Host ' .\winmake win-gvproxy'
