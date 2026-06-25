@@ -1060,8 +1060,6 @@ EXPOSE 2004-2005/tcp`, ALPINE)
 	configurePortForwarder := func(forwarder string) {
 		GinkgoHelper()
 		if forwarder == "pasta" {
-			// TODO: enable after new passt release with SELinux fix for pasta.sock (pasta_t + ifconfig_var_run_t)
-			Skip("disabled: pasta SELinux policy denies pasta.sock creation (needs passt release with fix)")
 			if !isRootless() {
 				Skip("pasta port forwarding requires rootless")
 			}
