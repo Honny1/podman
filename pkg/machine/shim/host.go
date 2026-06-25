@@ -2,6 +2,7 @@ package shim
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -615,7 +616,7 @@ func Start(mc *vmconfigs.MachineConfig, mp vmconfigs.VMProvider, opts machine.St
 	}
 
 	// start gvproxy and set up the API socket forwarding
-	forwardSocketPath, forwardingState, err := startNetworking(mc, mp)
+	forwardSocketPath, forwardingState, gvProxyNotifier, err := startNetworking(mc, mp)
 	if err != nil {
 		return err
 	}
@@ -628,6 +629,23 @@ func Start(mc *vmconfigs.MachineConfig, mp vmconfigs.VMProvider, opts machine.St
 		return nil
 	}
 	callbackFuncs.Add(cleanGv)
+
+	// Wait for gvproxy to signal readiness via the notification socket.
+	if gvProxyNotifier != nil {
+		notifyCtx, notifyCancel := context.WithCancel(context.Background())
+		go gvProxyNotifier.Start(notifyCtx)
+		defer func() {
+			notifyCancel()
+			gvProxyNotifier.Close()
+		}()
+
+		gvProxyReadyCtx, gvProxyReadyCancel := context.WithTimeout(context.Background(), machine.GvProxyReadyTimeout)
+		defer gvProxyReadyCancel()
+		if err := gvProxyNotifier.WaitReady(gvProxyReadyCtx); err != nil {
+			return fmt.Errorf("waiting for gvproxy readiness: %w", err)
+		}
+		logrus.Debug("gvproxy ready notification received")
+	}
 
 	// if there are generic things that need to be done, a preStart function could be added here
 	// should it be extensive
