@@ -191,7 +191,7 @@ when `%{_bindir}/%{name}sh` is set as a login shell or set as os.Args[0].
 %package machine
 Summary: Metapackage for setting up %{name} machine
 Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires: gvisor-tap-vsock
+Requires: gvisor-tap-vsock >= 0.9.0
 %if %{defined qemu}
 %ifarch aarch64
 Requires: qemu-system-aarch64-core
