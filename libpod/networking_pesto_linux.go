@@ -24,11 +24,7 @@ import (
 )
 
 func (r *Runtime) pestoSocketPath() string {
-	info, err := r.network.RootlessNetnsInfo()
-	if err != nil || info == nil {
-		return ""
-	}
-	return info.PestoSocketPath
+	return r.network.PestoSocketPath()
 }
 
 // setupRootlessPortMappingViaPesto adds this container's port forwarding
