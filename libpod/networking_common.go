@@ -122,7 +122,7 @@ func (r *Runtime) teardownNetwork(ctr *Container) error {
 	// Pasta forwarding mode: remove port forwarding rules (via pesto) before
 	// netavark tears down bridge/nftables so pasta stops forwarding first.
 	// Rootlessport mode: no explicit teardown needed (exits with conmon).
-	if rootless.IsRootless() && ctr.config.NetMode.IsBridge() && len(ctr.config.PortMappings) > 0 &&
+	if rootless.IsRootless() && len(ctr.config.PortMappings) > 0 &&
 		r.config.Network.RootlessPortForwarder == config.RootlessPortForwarderPasta {
 		if err := r.teardownRootlessPortMappingViaPesto(ctr); err != nil {
 			logrus.Warnf("pesto port cleanup failed for container %s: %v", ctr.ID(), err)

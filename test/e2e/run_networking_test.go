@@ -1190,6 +1190,28 @@ EXPOSE 2004-2005/tcp`, ALPINE)
 			podmanTest.PodmanExitCleanly("rm", "-f", "cleanup-ctr2")
 		})
 
+		It(fmt.Sprintf("podman restart with port forwarding on user-defined network with %s", forwarder), func() {
+			configurePortForwarder(forwarder)
+			netName := createNetworkName("restart")
+			podmanTest.PodmanExitCleanly("network", "create", netName)
+			defer podmanTest.removeNetwork(netName)
+
+			port := GetPort()
+			podmanTest.PodmanExitCleanly(
+				"run", "-d",
+				"--name", "restart-ctr",
+				"--network", netName,
+				"-p", fmt.Sprintf("127.0.0.1:%d:80", port),
+				NGINX_IMAGE,
+			)
+
+			testPortConnection(port)
+			podmanTest.PodmanExitCleanly("restart", "restart-ctr")
+			testPortConnection(port)
+
+			podmanTest.PodmanExitCleanly("rm", "-f", "restart-ctr")
+		})
+
 		It(fmt.Sprintf("podman run bridge dual-stack network IPv4 and IPv6 port forwarding with %s", forwarder), func() {
 			SkipIfNotRootless("netavark does not support IPv6 port forwarding")
 			configurePortForwarder(forwarder)
