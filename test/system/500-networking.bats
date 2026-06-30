@@ -432,7 +432,7 @@ EOCONF
     _test_network_reload rootlessport
 }
 
-# bats test_tags=ci:parallel
+# CANNOT BE PARALLELIZED: switches rootless_port_forwarder, unsafe with other containers running
 @test "podman network reload - pasta forwarder" {
     skip_if_remote "podman network reload does not have remote support"
     is_rootless || skip "pasta port forwarder requires rootless"
@@ -643,7 +643,7 @@ EOCONF
     _test_network_connect_disconnect rootlessport
 }
 
-# bats test_tags=ci:parallel
+# CANNOT BE PARALLELIZED: switches rootless_port_forwarder, unsafe with other containers running
 @test "podman network connect/disconnect with port forwarding - pasta forwarder" {
     is_rootless || skip "pasta port forwarder requires rootless"
     type -P pesto >/dev/null || skip "pesto not available"
@@ -755,7 +755,7 @@ EOCONF
     _test_network_after_restart rootlessport
 }
 
-# bats test_tags=ci:parallel
+# CANNOT BE PARALLELIZED: switches rootless_port_forwarder, unsafe with other containers running
 @test "podman network after restart - pasta forwarder" {
     is_rootless || skip "pasta port forwarder requires rootless"
     type -P pesto >/dev/null || skip "pesto not available"
