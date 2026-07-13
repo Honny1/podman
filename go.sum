@@ -14,6 +14,12 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
+github.com/QiWang19/container-libs/common v0.0.0-20260718044158-1a0c1ef7af4d h1:XllsE+c9JWtjWkQC+/z5Ohf6DHkY0Cre8ApZVxfFVjo=
+github.com/QiWang19/container-libs/common v0.0.0-20260718044158-1a0c1ef7af4d/go.mod h1:ZuEU7zUjo42t8pUyPWf+IenpJnyqlqQZ9QelnDG8BSo=
+github.com/QiWang19/container-libs/image/v5 v5.0.0-20260718044158-1a0c1ef7af4d h1:GGLN0MGypWR2lqFZH5tINy7+r5XUwaytdHdtNasCu7k=
+github.com/QiWang19/container-libs/image/v5 v5.0.0-20260718044158-1a0c1ef7af4d/go.mod h1:1KR3z+csVSV9cJ/N6dcPoHpffLUrLFXCfWps1fLJoD0=
+github.com/QiWang19/container-libs/storage v0.0.0-20260718044158-1a0c1ef7af4d h1:jrTtE63UY3mADXSQX+YSQzi6OvJROHrd5B1zpRKREWA=
+github.com/QiWang19/container-libs/storage v0.0.0-20260718044158-1a0c1ef7af4d/go.mod h1:g6v0ag2E2pXPMEbJrhWwptEtpBKeKHS+AxkflSb/KvU=
 github.com/VividCortex/ewma v1.2.0 h1:f58SaIzcDXrSy3kWaHNvuJgJ3Nmz59Zji6XoJR/q1ow=
 github.com/VividCortex/ewma v1.2.0/go.mod h1:nz4BbCtbLyFDeC9SUHbtcT5644juEuWfUAUnGx7j5l4=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
@@ -98,8 +104,8 @@ github.com/disiqueira/gotree/v3 v3.0.2 h1:ik5iuLQQoufZBNPY518dXhiO5056hyNBIK9lWh
 github.com/disiqueira/gotree/v3 v3.0.2/go.mod h1:ZuyjE4+mUQZlbpkI24AmruZKhg3VHEgPLDY8Qk+uUu8=
 github.com/distribution/reference v0.6.0 h1:0IXCQ5g4/QMHHkarYzh5l+u8T3t73zM5QvfrDyIgxBk=
 github.com/distribution/reference v0.6.0/go.mod h1:BbU0aIcezP1/5jX/8MP0YiH4SdvB5Y4f/wlDRiLyi3E=
-github.com/docker/cli v29.6.2+incompatible h1:/bjePvcbbFTnRrMfWJBY7AjfICdsiLVgHn6LwTVOcqw=
-github.com/docker/cli v29.6.2+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
+github.com/docker/cli v29.6.1+incompatible h1:oO7F4nn3Ovr/5TlfTUWFbMwBSS/B7Xs6Epv26gBrUP8=
+github.com/docker/cli v29.6.1+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
 github.com/docker/distribution v2.8.3+incompatible h1:AtKxIZ36LoNK51+Z6RpzLpddBirtxJnzDrHLEKxTAYk=
 github.com/docker/distribution v2.8.3+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/docker-credential-helpers v0.9.8 h1:bIREROb7So6PRlq6KTtdS9MPEjC29OQRkFNlvK2OX8Q=
@@ -429,12 +435,6 @@ go.opentelemetry.io/otel/trace v1.44.0 h1:jxF5CsGYCe74MCRx2X4g7WsY/VBKRqqpNvXlX/
 go.opentelemetry.io/otel/trace v1.44.0/go.mod h1:oLl1jrMQAVo6v3GAggN+1VH9VIz9iUSvW53sW1Q8PIE=
 go.podman.io/buildah v1.44.1-0.20260710171501-e4b285a365f3 h1:ZAY9h3tE+3LIc2wYXi1QXOYkXkObz87llId3iFJAQVc=
 go.podman.io/buildah v1.44.1-0.20260710171501-e4b285a365f3/go.mod h1:iYHOGrAIShcPz3/on7A7p+oQP2i7+F2PocMnLQ0aGzs=
-go.podman.io/common v0.68.2-0.20260717163110-b3642f3cf650 h1:rdx7fBNGc2dK3doS3+c9F/hCfJ5exKOEiPJGRt+f7Rk=
-go.podman.io/common v0.68.2-0.20260717163110-b3642f3cf650/go.mod h1:xjy9Waf/FlW1bO+3WJQJgaNlQGLXsZpPA6ChP8cC6c0=
-go.podman.io/image/v5 v5.40.1-0.20260717163110-b3642f3cf650 h1:NbK2uomTKf+6XjiwZI/RVURjoN7AqyZSbIN3zHYlShg=
-go.podman.io/image/v5 v5.40.1-0.20260717163110-b3642f3cf650/go.mod h1:NCfaVZKN1mBnSlSIQ+BAUxdFfQL+heJEYTJIikdKJE0=
-go.podman.io/storage v1.63.1-0.20260717163110-b3642f3cf650 h1:fGV1ur1bxVV9Ifqnqmn04fotQtwIiweMU2n7aQt4hAI=
-go.podman.io/storage v1.63.1-0.20260717163110-b3642f3cf650/go.mod h1:9dSXsy/4V1Fe8EPBvw95fPSi6clbaaBCkz/QvKFFwL4=
 go.yaml.in/yaml/v2 v2.4.4 h1:tuyd0P+2Ont/d6e2rl3be67goVK4R6deVxCUX5vyPaQ=
 go.yaml.in/yaml/v2 v2.4.4/go.mod h1:gMZqIpDtDqOfM0uNfy0SkpRhvUryYH0Z6wdMYcacYXQ=
 go.yaml.in/yaml/v3 v3.0.4 h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=
