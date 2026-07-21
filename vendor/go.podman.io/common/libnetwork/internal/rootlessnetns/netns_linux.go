@@ -132,6 +132,9 @@ func (n *Netns) getOrCreateNetns() (netns.NetNS, bool, error) {
 			logrus.Warnf("failed to read rootless netns program pid: %v", err)
 		}
 		// In case of errors continue and setup the network cmd again.
+		// When pasta restarts all forwarding rules are lost.
+		// pestoSetup detects this via pesto --show and re-publishes
+		// on the next Setup call.
 	} else {
 		// Special case, the file might exist already but is not a valid netns.
 		// One reason could be that a previous setup was killed between creating

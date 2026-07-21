@@ -61,10 +61,12 @@ func (r *Runtime) configureNetNS(ctr *Container, ctrNS string) (status map[strin
 	}()
 
 	// Set up port forwarding for rootless bridge networks.
+	// Note: pasta/pesto port forwarding is handled inside container-libs
+	// netavark Setup(), so only rootlessport needs explicit setup here.
 	if rootless.IsRootless() && len(ctr.config.PortMappings) > 0 {
 		switch r.config.Network.RootlessPortForwarder {
 		case config.RootlessPortForwarderPasta:
-			err = r.setupRootlessPortMappingViaPesto(ctr)
+			// Handled by container-libs netavark Setup()
 		case config.RootlessPortForwarderRootlessport, "":
 			if ctr.getNetworkStatus() == nil {
 				err = r.setupRootlessPortMappingViaRLK(ctr, ctrNS, netStatus)

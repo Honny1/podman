@@ -224,7 +224,3 @@ func (c *Container) inspectJoinedNetworkNS(_ string) (q types.StatusBlock, retEr
 func (c *Container) reloadRootlessRLKPortMapping() error {
 	return errors.New("unsupported (*Container).reloadRootlessRLKPortMapping")
 }
-
-func (r *Runtime) teardownRootlessPortMappingViaPesto(_ *Container) error {
-	return errors.New("unsupported teardownRootlessPortMappingViaPesto on FreeBSD")
-}

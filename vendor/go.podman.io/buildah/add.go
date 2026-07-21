@@ -26,7 +26,6 @@ import (
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
-	"github.com/tonistiigi/dchapes-mode"
 	"go.podman.io/buildah/copier"
 	"go.podman.io/buildah/define"
 	"go.podman.io/buildah/internal/tmpdir"
@@ -103,7 +102,7 @@ type AddAndCopyOptions struct {
 	// the source paths for source locations which include such a
 	// component.
 	Parents bool
-	// Timestamp, if set, overrides timestamps on all added or copied content.
+	// Timestamp is a timestamp to override on all content as it is being read.
 	Timestamp *time.Time
 	// Link, when set to true, creates an independent layer containing the copied content
 	// that sits on top of existing layers. This layer can be cached and reused
@@ -123,13 +122,10 @@ type AddAndCopyOptions struct {
 	// AllowEmptyWildcard controls whether the operation succeeds when all
 	// glob patterns match nothing. Defaults to false.
 	AllowEmptyWildcard types.OptionalBool
-	// FollowSymlink controls whether symlinks should be followed when copying content.
-	// When set to false, symlinks are not dereferenced.
-	FollowSymlink types.OptionalBool
 }
 
 // getURL writes a tar archive containing the named content
-func getURL(src string, chown *idtools.IDPair, mountpoint, renameTarget string, writer io.Writer, chmod string, srcDigest digest.Digest, certPath string, insecureSkipTLSVerify types.OptionalBool, timestamp *time.Time) error {
+func getURL(src string, chown *idtools.IDPair, mountpoint, renameTarget string, writer io.Writer, chmod *os.FileMode, srcDigest digest.Digest, certPath string, insecureSkipTLSVerify types.OptionalBool, timestamp *time.Time) error {
 	url, err := url.Parse(src)
 	if err != nil {
 		return err
@@ -218,13 +214,9 @@ func getURL(src string, chown *idtools.IDPair, mountpoint, renameTarget string, 
 		uid = chown.UID
 		gid = chown.GID
 	}
-	var mod int64 = 0o600
-	if chmod != "" {
-		p, err := mode.Parse(chmod)
-		if err != nil {
-			return fmt.Errorf("parsing chmod %q: %w", chmod, err)
-		}
-		mod = int64(p.Apply(os.FileMode(mod)))
+	var mode int64 = 0o600
+	if chmod != nil {
+		mode = int64(*chmod)
 	}
 	hdr := tar.Header{
 		Typeflag: tar.TypeReg,
@@ -232,7 +224,7 @@ func getURL(src string, chown *idtools.IDPair, mountpoint, renameTarget string, 
 		Size:     size,
 		Uid:      uid,
 		Gid:      gid,
-		Mode:     mod,
+		Mode:     mode,
 		ModTime:  date,
 	}
 	err = tw.WriteHeader(&hdr)
@@ -416,6 +408,15 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 			return fmt.Errorf("looking up UID/GID for %q: %w", options.Chown, err)
 		}
 	}
+	var chmodDirsFiles *os.FileMode
+	if options.Chmod != "" {
+		p, err := strconv.ParseUint(options.Chmod, 8, 32)
+		if err != nil {
+			return fmt.Errorf("parsing chmod %q: %w", options.Chmod, err)
+		}
+		perm := os.FileMode(p)
+		chmodDirsFiles = &perm
+	}
 
 	chownDirs = &idtools.IDPair{UID: int(userUID), GID: int(userGID)}
 	chownFiles = &idtools.IDPair{UID: int(userUID), GID: int(userGID)}
@@ -598,22 +599,22 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 				go func() {
 					defer wg.Done()
 					defer pipeWriter.Close()
+					// TODO: the returned cloneDir is never cleaned up, leaking disk space.
 					var cloneDir, subdir string
 					cloneDir, subdir, getErr = define.TempDirForURL(tmpdir.GetTempDir(), "", src)
 					if getErr != nil {
 						return
 					}
-					defer os.RemoveAll(cloneDir)
 					getOptions := copier.GetOptions{
 						UIDMap:             srcUIDMap,
 						GIDMap:             srcGIDMap,
 						Excludes:           options.Excludes,
 						ExpandArchives:     extract,
-						Chmod:              options.Chmod,
 						ChownDirs:          chownDirs,
+						ChmodDirs:          chmodDirsFiles,
 						ChownFiles:         chownFiles,
+						ChmodFiles:         chmodDirsFiles,
 						KeepDirectoryNames: options.DirCopyContents == types.OptionalBoolFalse,
-						NoDerefSymlinks:    options.FollowSymlink == types.OptionalBoolFalse,
 						StripSetuidBit:     options.StripSetuidBit,
 						StripSetgidBit:     options.StripSetgidBit,
 						StripStickyBit:     options.StripStickyBit,
@@ -626,7 +627,7 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 			} else {
 				go func() {
 					getErr = retry.IfNecessary(context.TODO(), func() error {
-						return getURL(src, chownFiles, mountPoint, renameTarget, pipeWriter, options.Chmod, srcDigest, options.CertPath, options.InsecureSkipTLSVerify, options.Timestamp)
+						return getURL(src, chownFiles, mountPoint, renameTarget, pipeWriter, chmodDirsFiles, srcDigest, options.CertPath, options.InsecureSkipTLSVerify, options.Timestamp)
 					}, &retry.Options{
 						MaxRetry: options.MaxRetries,
 						Delay:    options.RetryDelay,
@@ -636,7 +637,8 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 				}()
 			}
 
-			wg.Go(func() {
+			wg.Add(1)
+			go func() {
 				b.ContentDigester.Start("")
 				hashCloser := b.ContentDigester.Hash()
 				hasher := io.Writer(hashCloser)
@@ -654,13 +656,13 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 						ChownFiles:    nil,
 						ChmodFiles:    nil,
 						IgnoreDevices: userns.RunningInUserNS(),
-						Timestamp:     options.Timestamp,
 					}
 					putErr = copier.Put(putRoot, putDir, putOptions, io.TeeReader(pipeReader, hasher))
 				}
 				hashCloser.Close()
 				pipeReader.Close()
-			})
+				wg.Done()
+			}()
 			wg.Wait()
 			if getErr != nil {
 				getErr = fmt.Errorf("reading %q: %w", src, getErr)
@@ -737,7 +739,8 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 				latestTimestamp = st.ModTime
 			}
 			pipeReader, pipeWriter := io.Pipe()
-			wg.Go(func() {
+			wg.Add(1)
+			go func() {
 				renamedItems := 0
 				writer := io.WriteCloser(pipeWriter)
 				if renameTarget != "" {
@@ -775,9 +778,10 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 					GIDMap:             srcGIDMap,
 					Excludes:           options.Excludes,
 					ExpandArchives:     extract,
-					Chmod:              options.Chmod,
 					ChownDirs:          chownDirs,
+					ChmodDirs:          chmodDirsFiles,
 					ChownFiles:         chownFiles,
+					ChmodFiles:         chmodDirsFiles,
 					KeepDirectoryNames: options.DirCopyContents == types.OptionalBoolFalse,
 					StripSetuidBit:     options.StripSetuidBit,
 					StripSetgidBit:     options.StripSetgidBit,
@@ -786,15 +790,16 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 					Timestamp:          options.Timestamp,
 					DisallowWildcard:   options.AllowWildcard == types.OptionalBoolFalse,
 					AllowEmptyWildcard: options.AllowEmptyWildcard == types.OptionalBoolTrue,
-					NoDerefSymlinks:    options.FollowSymlink == types.OptionalBoolFalse,
 				}
 				getErr = copier.Get(contextDir, contextDir, getOptions, []string{globbedToGlobbable(globbed)}, writer)
 				closeErr = writer.Close()
 				if renameTarget != "" && renamedItems > 1 {
 					renameErr = fmt.Errorf("internal error: renamed %d items when we expected to only rename 1", renamedItems)
 				}
-			})
-			wg.Go(func() {
+				wg.Done()
+			}()
+			wg.Add(1)
+			go func() {
 				if st.IsDir {
 					b.ContentDigester.Start("dir")
 				} else {
@@ -818,13 +823,13 @@ func (b *Builder) Add(destination string, extract bool, options AddAndCopyOption
 						ChownFiles:      nil,
 						ChmodFiles:      nil,
 						IgnoreDevices:   userns.RunningInUserNS(),
-						Timestamp:       options.Timestamp,
 					}
 					putErr = copier.Put(putRoot, putDir, putOptions, io.TeeReader(pipeReader, hasher))
 				}
 				hashCloser.Close()
 				pipeReader.Close()
-			})
+				wg.Done()
+			}()
 
 			wg.Wait()
 			if getErr != nil {

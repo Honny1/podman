@@ -810,10 +810,7 @@ func (t *http2Server) handleData(f *parsedDataFrame) {
 		dataLen := f.data.Len()
 		if f.Header().Flags.Has(http2.FlagDataPadded) {
 			if w := s.fc.onRead(size - uint32(dataLen)); w > 0 {
-				t.controlBuf.put(&outgoingWindowUpdate{
-					streamID:  s.id,
-					increment: w,
-				})
+				t.controlBuf.put(&outgoingWindowUpdate{s.id, w})
 			}
 		}
 		if dataLen > 0 {
@@ -1050,7 +1047,7 @@ func (t *http2Server) writeHeaderLocked(s *ServerStream) error {
 		headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-encoding", Value: s.sendCompress})
 	}
 	headerFields = appendHeaderFieldsFromMD(headerFields, s.header)
-	hf := &serverHeaders{
+	hf := &headerFrame{
 		streamID:  s.id,
 		hf:        headerFields,
 		endStream: false,
@@ -1118,7 +1115,7 @@ func (t *http2Server) writeStatus(s *ServerStream, st *status.Status) error {
 
 	// Attach the trailer metadata.
 	headerFields = appendHeaderFieldsFromMD(headerFields, s.trailer)
-	trailingHeader := &serverHeaders{
+	trailingHeader := &headerFrame{
 		streamID:  s.id,
 		hf:        headerFields,
 		endStream: true,
@@ -1328,7 +1325,7 @@ func (t *http2Server) deleteStream(s *ServerStream, eosReceived bool) {
 }
 
 // finishStream closes the stream and puts the trailing headerFrame into controlbuf.
-func (t *http2Server) finishStream(s *ServerStream, rst bool, rstCode http2.ErrCode, hdr *serverHeaders, eosReceived bool) {
+func (t *http2Server) finishStream(s *ServerStream, rst bool, rstCode http2.ErrCode, hdr *headerFrame, eosReceived bool) {
 	// In case stream sending and receiving are invoked in separate
 	// goroutines (e.g., bi-directional streaming), cancel needs to be
 	// called to interrupt the potential blocking on other goroutines.
@@ -1467,7 +1464,7 @@ func (t *http2Server) getOutFlowWindow() int64 {
 	resp := make(chan uint32, 1)
 	timer := time.NewTimer(time.Second)
 	defer timer.Stop()
-	t.controlBuf.put(&outFlowControlSizeRequest{resp: resp})
+	t.controlBuf.put(&outFlowControlSizeRequest{resp})
 	select {
 	case sz := <-resp:
 		return int64(sz)
