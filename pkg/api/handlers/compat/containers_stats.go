@@ -60,9 +60,7 @@ func StatsContainer(w http.ResponseWriter, r *http.Request) {
 
 	// https://github.com/containers/podman/issues/24730
 	// Docker always populates precpu_stats, even with stream=false.
-	// Seed it here so non-streaming clients can compute a CPU delta.
-	// Note: without a background collector the delta between samples is
-	// small (milliseconds); for accurate CPU% use stream=true.
+	// Seed it here so non-streaming clients get non-zero precpu_stats.
 	preRead := time.Now()
 	preCPUStats := getPreCPUStats(stats)
 
