@@ -592,6 +592,7 @@ func LibpodToContainerJSON(l *libpod.Container, sz bool) (*handlers.LegacyImageI
 	if err := json.Unmarshal(h, &hc); err != nil {
 		return nil, err
 	}
+	hc.Runtime = inspect.OCIRuntime
 	sort.Strings(hc.Binds)
 
 	// Map CgroupMode to CgroupnsMode for Docker API compatibility

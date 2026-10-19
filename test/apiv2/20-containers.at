@@ -1104,7 +1104,38 @@ for runtime in "${oci_runtimes[@]}"; do
     .OCIRuntime="$runtime"
 
     t DELETE containers/$cid 204
+
+    # Docker Compose sends service runtime: as HostConfig.Runtime.
+    t POST containers/create \
+      Image=$IMAGE \
+      HostConfig="{\"Runtime\":\"$runtime\"}" \
+      201 \
+      .Id~[0-9a-f]\\{64\\}
+    cid=$(jq -r '.Id' <<<"$output")
+    t GET libpod/containers/$cid/json 200 \
+      .OCIRuntime="$runtime"
+    t GET containers/$cid/json 200 \
+      .HostConfig.Runtime="$runtime"
+    t DELETE containers/$cid 204
 done
+
+# Omitting HostConfig.Runtime must preserve the server's default runtime.
+t GET info 200
+default_runtime=$(jq -r '.DefaultRuntime' <<<"$output")
+t POST containers/create Image=$IMAGE 201
+cid=$(jq -r '.Id' <<<"$output")
+t GET libpod/containers/$cid/json 200 \
+  .OCIRuntime="$default_runtime"
+t GET containers/$cid/json 200 \
+  .HostConfig.Runtime="$default_runtime"
+t DELETE containers/$cid 204
+
+# An unavailable runtime must fail rather than silently use the default.
+t POST containers/create \
+  Image=$IMAGE \
+  HostConfig='{"Runtime":"podman-test-nonexistent-runtime"}' \
+  400 \
+  .message~".*requested OCI runtime podman-test-nonexistent-runtime is not available.*"
 
 # 27998: make sure a created (and not started) container with userns=auto shows
 # UsernsMode = private before being started
