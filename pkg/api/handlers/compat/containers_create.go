@@ -142,6 +142,8 @@ func CreateContainer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	sg.OCIRuntime = body.HostConfig.Runtime
+
 	// moby always create the working directory
 	localTrue := true
 	sg.CreateWorkingDir = &localTrue
@@ -155,6 +157,10 @@ func CreateContainer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, define.ErrCtrExists) || errors.Is(err, storage.ErrDuplicateName) {
 			utils.Error(w, http.StatusConflict, fmt.Errorf("container create: %w", err))
+			return
+		}
+		if errors.Is(err, define.ErrInvalidArg) {
+			utils.Error(w, http.StatusBadRequest, fmt.Errorf("container create: %w", err))
 			return
 		}
 		utils.Error(w, http.StatusInternalServerError, fmt.Errorf("container create: %w", err))
