@@ -1104,8 +1104,11 @@ for runtime in "${oci_runtimes[@]}"; do
     .OCIRuntime="$runtime"
 
     t DELETE containers/$cid 204
+done
 
-    # Docker Compose sends service runtime: as HostConfig.Runtime.
+# Docker-compatible API runtime selection.
+# Docker Compose sends service runtime: as HostConfig.Runtime.
+for runtime in "${oci_runtimes[@]}"; do
     t POST containers/create \
       Image=$IMAGE \
       HostConfig="{\"Runtime\":\"$runtime\"}" \
